@@ -1,33 +1,33 @@
-class firebaseService {
+class firestoreService {
     static async getQuerySnapShot(query) {
-        let result = []
+        let result = [];
         await query.get()
             .then((querySnapShot) => {
                 querySnapShot.forEach((snapShot) => {
-                    let dict = {}
-                    dict[snapShot.id] = snapShot.data()
+                    let dict = {};
+                    dict[snapShot.id] = snapShot.data();
                     result.push(dict)
 
-                })
+                });
                 return result
             })
             .catch((error) => {
-                alert(error)
+                alert(error);
                 return null
-            })
+            });
         return result
     }
 
     // Auto documentID
     static async addDocument(collection, data) {
-        return await collection.add(data)
+        return collection.add(data)
             .then(() => {
                 return true
             })
             .catch((error) => {
                 alert(error);
                 return false
-            })
+            });
     }
 
     // Custom documentID, replace existing
@@ -55,36 +55,36 @@ class firebaseService {
     }
 
     static async updateOrCreateDocument(collection, doc_id, data) {
-        let doc = collection.doc(doc_id)
-        let snapShot = await this.getSnapShot(doc)
+        let doc = collection.doc(doc_id);
+        let snapShot = await this.getSnapShot(doc);
 
-        let result
-        let created
+        let result;
+        let created;
         if (snapShot.exists) {
-            created = false
-            result = await firebaseService.updateDocument(collection, doc_id, data)
+            created = false;
+            result = await firestoreService.updateDocument(collection, doc_id, data)
         } else {
-            created = true
+            created = true;
             if (doc_id) {
-                result = await firebaseService.setDocument(collection, doc_id, data)
+                result = await firestoreService.setDocument(collection, doc_id, data)
             } else {
-                result = await firebaseService.addDocument(collection, data)
+                result = await firestoreService.addDocument(collection, data)
             }
         }
         return [created, result]
     }
 
     static async getSnapShot(doc) {
-        return await doc.get()
+        return doc.get()
             .then((snapShot) => {
                 return snapShot
             })
             .catch((error) => {
-                alert(error)
+                alert(error);
                 return null
-            })
+            });
     }
 
 }
 
-export default firebaseService
+export default firestoreService
