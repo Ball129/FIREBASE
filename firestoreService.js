@@ -1,4 +1,5 @@
-class firestoreService {
+class FirestoreService {
+
     static async getQuerySnapShot(query) {
         let result = [];
         await query.get()
@@ -7,13 +8,10 @@ class firestoreService {
                     let dict = {};
                     dict[snapShot.id] = snapShot.data();
                     result.push(dict)
-
                 });
-                return result
             })
             .catch((error) => {
                 alert(error);
-                return null
             });
         return result
     }
@@ -62,13 +60,13 @@ class firestoreService {
         let created;
         if (snapShot.exists) {
             created = false;
-            result = await firestoreService.updateDocument(collection, doc_id, data)
+            result = await FirestoreService.updateDocument(collection, doc_id, data)
         } else {
             created = true;
             if (doc_id) {
-                result = await firestoreService.setDocument(collection, doc_id, data)
+                result = await FirestoreService.setDocument(collection, doc_id, data)
             } else {
-                result = await firestoreService.addDocument(collection, data)
+                result = await FirestoreService.addDocument(collection, data)
             }
         }
         return [created, result]
@@ -87,4 +85,4 @@ class firestoreService {
 
 }
 
-export default firestoreService
+export default FirestoreService
