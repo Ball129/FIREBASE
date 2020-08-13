@@ -52,7 +52,7 @@ class FirestoreService {
             })
     }
 
-    static async updateOrCreateDocument(collection, doc_id, data) {
+    static async updateOrCreateDocument(collection, doc_id, data, overwrite=true) {
         let doc = collection.doc(doc_id);
         let snapShot = await this.getSnapShot(doc);
 
@@ -60,7 +60,7 @@ class FirestoreService {
         let created;
         if (snapShot.exists) {
             created = false;
-            result = await FirestoreService.updateDocument(collection, doc_id, data)
+            result = overwrite ? await FirestoreService.updateDocument(collection, doc_id, data) : null
         } else {
             created = true;
             if (doc_id) {
@@ -83,6 +83,19 @@ class FirestoreService {
             });
     }
 
+    static async checkIfExisted(queries=[]) {
+        let existed = false
+        await Promise.all(
+            queries.map((query) => {
+                return FirestoreService.getQuerySnapShot(query)
+            })
+        ).then(results => {
+            existed = (results.flat().length > 0)
+        }).catch(reason => {
+            existed = false
+        })
+        return existed
+    }
 }
 
 export default FirestoreService
