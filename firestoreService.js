@@ -19,8 +19,8 @@ class FirestoreService {
     // Auto documentID
     static async addDocument(collection, data) {
         return collection.add(data)
-            .then(() => {
-                return true
+            .then((docRef) => {
+                return docRef.id
             })
             .catch((error) => {
                 alert(error);
@@ -43,6 +43,18 @@ class FirestoreService {
     // Update existing
     static async updateDocument(collection, doc_id, data) {
         return await collection.doc(doc_id).update(data)
+            .then(() => {
+                return true
+            })
+            .catch((error) => {
+                alert(error);
+                return false
+            })
+    }
+
+    // Delete existing
+    static async deleteDocument(collection, doc_id) {
+        return await collection.doc(doc_id).delete()
             .then(() => {
                 return true
             })
