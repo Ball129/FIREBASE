@@ -1,6 +1,8 @@
+import _ from "lodash";
+
 class FirestoreService {
 
-    static async getQuerySnapShot(query) {
+    static async getQuerySnapShot(query, simplify=false) {
         let result = [];
         await query.get()
             .then((querySnapShot) => {
@@ -13,6 +15,19 @@ class FirestoreService {
             .catch((error) => {
                 alert(error);
             });
+
+        if (simplify) {
+            result = result.map(res => {
+                for (let key in res) {
+                    if (res.hasOwnProperty(key)) {
+                        let cloned = _.clone(res[key]);
+                        cloned.key = key;
+                        return cloned;
+                    }
+                }
+                return null
+            })
+        }
         return result
     }
 
