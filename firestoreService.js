@@ -21,7 +21,7 @@ class FirestoreService {
                 for (let key in res) {
                     if (res.hasOwnProperty(key)) {
                         let cloned = _.clone(res[key]);
-                        cloned.key = key;
+                        cloned.id = key;
                         return cloned;
                     }
                 }
