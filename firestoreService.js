@@ -2,7 +2,16 @@ import _ from "lodash";
 
 class FirestoreService {
 
-    static async getQuerySnapShot(query, simplify=false) {
+    static parseData(values) {
+        let val = values;
+        return _(val).keys().map(key => {
+            let cloned = _.clone(val[key]);
+            cloned.key = key;
+            return cloned;
+        }).value();
+    }
+
+    static async getQuerySnapShot(query, simplify = false) {
         let result = [];
         await query.get()
             .then((querySnapShot) => {
@@ -79,7 +88,7 @@ class FirestoreService {
             })
     }
 
-    static async updateOrCreateDocument(collection, doc_id, data, overwrite=true) {
+    static async updateOrCreateDocument(collection, doc_id, data, overwrite = true) {
         let doc = collection.doc(doc_id);
         let snapShot = await this.getSnapShot(doc);
 
@@ -99,6 +108,21 @@ class FirestoreService {
         return [created, result]
     }
 
+    static async get(db, collectionName, documentName, onFail) {
+        return db.collection(collectionName).doc(documentName).get()
+            .then((snapShot) => {
+                let val = snapShot.data();
+                return this.parseData(val)
+            })
+            .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
+                alert(error);
+                return null
+            });
+    }
+
     static async getSnapShot(doc) {
         return doc.get()
             .then((snapShot) => {
@@ -110,7 +134,7 @@ class FirestoreService {
             });
     }
 
-    static async checkIfExisted(queries=[]) {
+    static async checkIfExisted(queries = []) {
         let existed = false
         await Promise.all(
             queries.map((query) => {
