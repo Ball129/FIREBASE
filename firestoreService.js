@@ -1,14 +1,14 @@
-import _ from "lodash";
+import clone from "lodash/clone";
+import logger from "../../CORE/services";
 
 class FirestoreService {
 
-    static parseData(values) {
-        let val = values;
-        return _(val).keys().map(key => {
-            let cloned = _.clone(val[key]);
+    static object2Array(values) {
+        return Object.keys(values).map((key) => {
+            let cloned = clone(values[key]);
             cloned.key = key;
             return cloned;
-        }).value();
+        });
     }
 
     static async getQuerySnapShot(query, simplify = false) {
@@ -29,7 +29,7 @@ class FirestoreService {
             result = result.map(res => {
                 for (let key in res) {
                     if (res.hasOwnProperty(key)) {
-                        let cloned = _.clone(res[key]);
+                        let cloned = clone(res[key]);
                         cloned.id = key;
                         return cloned;
                     }
@@ -53,15 +53,19 @@ class FirestoreService {
     }
 
     // Custom documentID, replace existing
-    static async setDocument(collection, doc_id, data) {
+    static async setDocument(collection, doc_id, data, onFail) {
+        logger(`set: ${doc_id}`, data)
         return await collection.doc(doc_id).set(data)
             .then(() => {
                 return true
             })
             .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
                 alert(error);
-                return false
-            })
+                return null
+            });
     }
 
     // Update existing
@@ -109,10 +113,22 @@ class FirestoreService {
     }
 
     static async get(db, collectionName, documentName, onFail) {
-        return db.collection(collectionName).doc(documentName).get()
+        let fireStore
+        if (documentName) {
+            fireStore = db.collection(collectionName).doc(documentName)
+        } else if (collectionName) {
+            fireStore = db.collection(collectionName)
+        } else if (db) {
+            fireStore = db
+        } else {
+            return onFail('Specify at least one of db, collectionName, documentName !!')
+        }
+        return fireStore.get()
             .then((snapShot) => {
-                let val = snapShot.data();
-                return this.parseData(val)
+                if (snapShot && snapShot.exists) {
+                    return snapShot.data()
+                }
+                return null
             })
             .catch((error) => {
                 if (onFail) {
@@ -121,6 +137,16 @@ class FirestoreService {
                 alert(error);
                 return null
             });
+    }
+
+    static async getOrCreate(db, collectionName, documentName, data, onFail) {
+        let document = await this.get(db, collectionName, documentName, onFail)
+        if (document) {
+            return document
+        } else {
+            await this.setDocument(db.collection(collectionName), documentName, data, onFail)
+            return data
+        }
     }
 
     static async getSnapShot(doc) {
