@@ -69,15 +69,18 @@ class FirestoreService {
     }
 
     // Update existing
-    static async updateDocument(collection, doc_id, data) {
+    static async updateDocument(collection, doc_id, data, onFail) {
         return await collection.doc(doc_id).update(data)
             .then(() => {
                 return true
             })
             .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
                 alert(error);
-                return false
-            })
+                return null
+            });
     }
 
     // Delete existing
@@ -92,7 +95,7 @@ class FirestoreService {
             })
     }
 
-    static async updateOrCreateDocument(collection, doc_id, data, overwrite = true) {
+    static async updateOrCreateDocument(collection, doc_id, data, onFail) {
         let doc = collection.doc(doc_id);
         let snapShot = await this.getSnapShot(doc);
 
@@ -100,13 +103,13 @@ class FirestoreService {
         let created;
         if (snapShot.exists) {
             created = false;
-            result = overwrite ? await FirestoreService.updateDocument(collection, doc_id, data) : null
+            result = await FirestoreService.updateDocument(collection, doc_id, data, onFail)
         } else {
             created = true;
             if (doc_id) {
-                result = await FirestoreService.setDocument(collection, doc_id, data)
+                result = await FirestoreService.setDocument(collection, doc_id, data, onFail)
             } else {
-                result = await FirestoreService.addDocument(collection, data)
+                result = await FirestoreService.addDocument(collection, data, onFail)
             }
         }
         return [created, result]
