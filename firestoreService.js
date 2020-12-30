@@ -11,6 +11,46 @@ class FirestoreService {
         });
     }
 
+    // Get
+    static async get(db, collectionName, documentName, onFail) {
+        let fireStore
+        if (documentName) {
+            fireStore = db.collection(collectionName).doc(documentName)
+        } else if (collectionName) {
+            fireStore = db.collection(collectionName)
+        } else if (db) {
+            fireStore = db
+        } else {
+            return onFail('Specify at least one of db, collectionName, documentName !!')
+        }
+        return fireStore.get()
+            .then((snapShot) => {
+                if (snapShot && snapShot.exists) {
+                    return snapShot.data()
+                }
+                return null
+            })
+            .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
+                alert(error);
+                return null
+            });
+    }
+
+    static async getSnapShot(doc) {
+        logger('getSnapShot')
+        return doc.get()
+            .then((snapShot) => {
+                return snapShot
+            })
+            .catch((error) => {
+                alert(error);
+                return null
+            });
+    }
+
     static async getQuerySnapShot(query, simplify = false) {
         let result = [];
         await query.get()
@@ -84,17 +124,37 @@ class FirestoreService {
     }
 
     // Delete existing
-    static async deleteDocument(collection, doc_id) {
+    static async deleteDocument(collection, doc_id, onFail) {
         return await collection.doc(doc_id).delete()
             .then(() => {
                 return true
             })
             .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
                 alert(error);
-                return false
-            })
+                return null
+            });
     }
 
+    static async deleteField(db, doc, field_name, onFail) {
+        return await doc.update({
+            [field_name]: db.firestore.FieldValue.delete()
+        })
+            .then(() => {
+                return true
+            })
+            .catch((error) => {
+                if (onFail) {
+                    return onFail(error)
+                }
+                alert(error);
+                return null
+            });
+    }
+
+    // Combined
     static async updateOrCreateDocument(collection, doc_id, data, onFail) {
         let doc = collection.doc(doc_id);
         let snapShot = await this.getSnapShot(doc);
@@ -115,33 +175,6 @@ class FirestoreService {
         return [created, result]
     }
 
-    static async get(db, collectionName, documentName, onFail) {
-        let fireStore
-        if (documentName) {
-            fireStore = db.collection(collectionName).doc(documentName)
-        } else if (collectionName) {
-            fireStore = db.collection(collectionName)
-        } else if (db) {
-            fireStore = db
-        } else {
-            return onFail('Specify at least one of db, collectionName, documentName !!')
-        }
-        return fireStore.get()
-            .then((snapShot) => {
-                if (snapShot && snapShot.exists) {
-                    return snapShot.data()
-                }
-                return null
-            })
-            .catch((error) => {
-                if (onFail) {
-                    return onFail(error)
-                }
-                alert(error);
-                return null
-            });
-    }
-
     static async getOrCreate(db, collectionName, documentName, data, onFail) {
         let document = await this.get(db, collectionName, documentName, onFail)
         if (document) {
@@ -150,17 +183,6 @@ class FirestoreService {
             await this.setDocument(db.collection(collectionName), documentName, data, onFail)
             return data
         }
-    }
-
-    static async getSnapShot(doc) {
-        return doc.get()
-            .then((snapShot) => {
-                return snapShot
-            })
-            .catch((error) => {
-                alert(error);
-                return null
-            });
     }
 
     static async checkIfExisted(queries = []) {
@@ -175,6 +197,24 @@ class FirestoreService {
             existed = false
         })
         return existed
+    }
+
+    // Watcher
+    static documentWatcher(doc, onEvent) {
+        logger(`Subscribed`)
+        return doc.onSnapshot(onEvent);
+    }
+
+    static collectionWatcher(collection, onEvent) {
+        logger(`Subscribed`)
+        return collection.onSnapshot(onEvent);
+    }
+
+    static unsubscribe(watcher) {
+        if (watcher instanceof Function) {
+            logger(`Unsubscribed`)
+            watcher();
+        }
     }
 }
 
