@@ -26,7 +26,13 @@ class FirestoreService {
         return fireStore.get()
             .then((snapShot) => {
                 if (snapShot && snapShot.exists) {
+                    // Document data
                     return snapShot.data()
+                } else if (snapShot && snapShot.docs) {
+                    // Documents list
+                    return snapShot.docs.map(doc => {
+                        return {id: doc.id, ...doc.data()}
+                    })
                 }
                 return null
             })
