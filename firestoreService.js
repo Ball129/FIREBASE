@@ -1,5 +1,4 @@
 import clone from "lodash/clone";
-import logger from "../../CORE/services";
 
 class FirestoreService {
 
@@ -46,7 +45,6 @@ class FirestoreService {
     }
 
     static async getSnapShot(doc) {
-        logger('getSnapShot')
         return doc.get()
             .then((snapShot) => {
                 return snapShot
@@ -100,7 +98,6 @@ class FirestoreService {
 
     // Custom documentID, replace existing
     static async setDocument(collection, doc_id, data, onFail) {
-        logger(`set: ${doc_id}`, data)
         return await collection.doc(doc_id).set(data)
             .then(() => {
                 return true
@@ -207,18 +204,15 @@ class FirestoreService {
 
     // Watcher
     static documentWatcher(doc, onEvent) {
-        logger(`Subscribed`)
         return doc.onSnapshot(onEvent);
     }
 
     static collectionWatcher(collection, onEvent) {
-        logger(`Subscribed`)
         return collection.onSnapshot(onEvent);
     }
 
     static unsubscribe(watcher) {
         if (watcher instanceof Function) {
-            logger(`Unsubscribed`)
             watcher();
         }
     }
